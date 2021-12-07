@@ -3,6 +3,6 @@ from django.urls import path, include
 from django.conf.urls import url 
 
 urlpatterns = [
-    url(r'^', include('task-django.api.urls')),
+    url(r'^', include('task.api.urls')),
     path('admin/', admin.site.urls),
 ]

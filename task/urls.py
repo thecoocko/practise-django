@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import DriverView, VehicleView
 
-app_name = 'task-django'
+app_name = 'task'
 
 urlpatterns = [
     path('drivers/driver/', DriverView.as_view(), name = 'driver.html'),

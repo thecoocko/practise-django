@@ -27,9 +27,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'task-django'
+    'task'
     
 ]
+
+CSRF_COOKIE_SECURE = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -113,4 +115,4 @@ STATICFILES_DIRS = STATICFILES_DIRS=[(os.path.join(BASE_DIR,'static'))]
 
 STATIC_URL = '/static/'
 
-PLATE_NUMBER_FORMAT = ['^[A-Z]+\s+\d{4}+\s+[A-Z]{2}+$','^[А-Я]{2}+\s+\d{4}+\s+[А-Я]{2}+$']
+
