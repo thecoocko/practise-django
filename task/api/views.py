@@ -1,5 +1,3 @@
-from datetime import datetime
-from re import split
 from django.http import JsonResponse
 from django.views.generic import View
 from ..models import Driver, Vehicle
@@ -11,19 +9,19 @@ import json
 
 
 class DriverViewAPI(View):
-    
-    def filter_driver(self,*args, **kwargs):
-        pass
 
     def get(self,request, *args, **kwargs,):
         
-        drivers = Driver.objects.values('first_name','last_name','created_at','updated_at')
-        if request.GET.get('created_at__gte') != None:
+        drivers = Driver.objects.all()
+        print(request.GET.urlencode())
+        #request.GET.get()
+        if request.GET.urlencode() == 'created_at__gte':
             date = ('-'.join(request.GET.get('created_at__gte').split('-')[::-1])+'T00:00:00Z').replace(' ','')
-            created_at = request.GET.get('created_at__gte','None')
-            print(created_at)
-            #drivers = Driver.objects.all().filter(created_at__gte = '2000-02-22T00:00:00Z')
-
+            drivers = drivers.exclude(created_at__gte=date)
+        elif request.GET.get('created_at__lte') == '16-11-2021':
+            date = ('-'.join(request.GET.get('created_at__gte').split('-')[::-1])+'T00:00:00Z').replace(' ','')
+            drivers = drivers.exclude(created_at__lte=date)
+        drivers = drivers.values('first_name','last_name','created_at','updated_at')   
         data = {
             'drivers' : list(drivers)
         }
