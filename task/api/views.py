@@ -1,21 +1,33 @@
+from datetime import datetime
+from re import split
 from django.http import JsonResponse
 from django.views.generic import View
 from ..models import Driver, Vehicle
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.core import serializers
+from django.utils import dateformat
 import json
 
 
 class DriverViewAPI(View):
     
+    def filter_driver(self,*args, **kwargs):
+        pass
+
     def get(self,request, *args, **kwargs,):
         
         drivers = Driver.objects.values('first_name','last_name','created_at','updated_at')
+        if request.GET.get('created_at__gte') != None:
+            date = ('-'.join(request.GET.get('created_at__gte').split('-')[::-1])+'T00:00:00Z').replace(' ','')
+            created_at = request.GET.get('created_at__gte','None')
+            print(created_at)
+            #drivers = Driver.objects.all().filter(created_at__gte = '2000-02-22T00:00:00Z')
+
         data = {
             'drivers' : list(drivers)
         }
-        return JsonResponse({'success':data})
+        return JsonResponse(data)
     
     @csrf_exempt
     def post(self,request,*args, **kwargs):
@@ -51,14 +63,25 @@ class DriverViewAPIWithID(View):
         data = json.loads(serializers.serialize('json',[newDriver]))
         return JsonResponse({'success':data})
 
-
+class DriverViewAPISearch(View):
+    
+        def get(self,request,id, *args, **kwargs,):
+            print('hello')
+            return JsonResponse(kwargs.get('created_at__gte'))
 
 class VehicleViewAPI(View):
     
     def get(self,request, *args, **kwargs):
-        vehicles = Vehicle.objects.values('driver_id','make','model','plate_number','created_at','updated_at')
+        vehicles = Vehicle.objects.all()
+
+        if request.GET.get('with_drivers') == 'yes':
+            vehicles = vehicles.exclude(driver_id__isnull=True)
+        elif request.GET.get('with_drivers') == 'no':
+            vehicles = vehicles.exclude(driver_id__isnull=False)
+            
+        vehicles = vehicles.values('driver_id','make','model','plate_number','created_at','updated_at')
         data = {
-            'drivers' : list(vehicles)
+        'vehicles' : list(vehicles)
         }
         return JsonResponse(data)
     
@@ -95,3 +118,4 @@ class VehicleViewAPIWithID(View):
         newVehicle = Vehicle.objects.all()
         data = json.loads(serializers.serialize('json',[newVehicle]))
         return JsonResponse({'success':data})
+
