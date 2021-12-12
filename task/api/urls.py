@@ -13,5 +13,5 @@ urlpatterns = [
     path('vehicles/vehicle/', csrf_exempt(VehicleViewAPI.as_view()), name = name_vehicle),
     path('vehicles/vehicle/<int:id>/', csrf_exempt(VehicleViewAPIWithID.as_view()), name = name_vehicle),
     path('vehicles/set_driver/<int:id>/', csrf_exempt(VehicleViewAPISetDriver.as_view()), name = name_vehicle),
-    #set_driver not done
+
 ] 
