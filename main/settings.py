@@ -103,18 +103,19 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = True
+USE_L10N = False
 
 USE_TZ = True
 
-DATE_FORMAT = '%d/%m/%Y'
+DATE_FORMAT = '%d-%m-%Y'
 
+DATETIME_FORMAT = 'd-m-Y'
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATICFILES_DIRS = STATICFILES_DIRS=[(os.path.join(BASE_DIR,'static'))]
+STATICFILES_DIRS = [(os.path.join(BASE_DIR,'static'))]
 
 STATIC_URL = '/static/'
 

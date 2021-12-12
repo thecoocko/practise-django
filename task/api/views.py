@@ -4,8 +4,9 @@ from ..models import Driver, Vehicle
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.core import serializers
-from django.utils import dateformat
 import json
+import re
+import traceback
 
 
 class DriverViewAPI(View):
@@ -13,14 +14,10 @@ class DriverViewAPI(View):
     def get(self,request, *args, **kwargs,):
         
         drivers = Driver.objects.all()
-        print(request.GET.urlencode())
-        #request.GET.get()
-        if request.GET.urlencode() == 'created_at__gte':
-            date = ('-'.join(request.GET.get('created_at__gte').split('-')[::-1])+'T00:00:00Z').replace(' ','')
-            drivers = drivers.exclude(created_at__gte=date)
-        elif request.GET.get('created_at__lte') == '16-11-2021':
-            date = ('-'.join(request.GET.get('created_at__gte').split('-')[::-1])+'T00:00:00Z').replace(' ','')
-            drivers = drivers.exclude(created_at__lte=date)
+        if request.GET.get('created_at__gte') == '10-11-2021':
+            #date = ('-'.join(request.GET.get('created_at__gte').split('-')[::-1])+'T00:00:00Z').replace(' ','')
+            drivers = drivers.exclude(created_at__gte='10-11-2021')
+           
         drivers = drivers.values('first_name','last_name','created_at','updated_at')   
         data = {
             'drivers' : list(drivers)
@@ -55,17 +52,12 @@ class DriverViewAPIWithID(View):
     
     @method_decorator(csrf_exempt, name='dispatch')
     def delete(self,request,id, *args, **kwargs):
-        body = json.loads(request.body("utf-8"))
+        
         Driver.objects.filter(pk=id).delete()
         newDriver = Driver.objects.all()
         data = json.loads(serializers.serialize('json',[newDriver]))
+          
         return JsonResponse({'success':data})
-
-class DriverViewAPISearch(View):
-    
-        def get(self,request,id, *args, **kwargs,):
-            print('hello')
-            return JsonResponse(kwargs.get('created_at__gte'))
 
 class VehicleViewAPI(View):
     
@@ -86,11 +78,13 @@ class VehicleViewAPI(View):
     @method_decorator(csrf_exempt, name='dispatch')
     def post(self,request,*args, **kwargs):
         body = json.loads(request.body.decode("utf-8"))
-        newCar = Vehicle.objects.create(driver_id=body['driver_id'],make=body['make'],model=body['mamodelke'],plate_number=body['plate_number'])
-        data = json.loads(serializers.serialize('json',[newCar]))
+        try:
+            driver_instance = Driver.objects.get(pk=body['driver_id'])
+            newCar = Vehicle.objects.create(driver_id=driver_instance,make=body['make'],model=body['model'],plate_number=body['plate_number'])
+            data = json.loads(serializers.serialize('json',[newCar]))
+        except Exception:
+            return JsonResponse({"error":traceback.format_exc()})
         return JsonResponse({'success':data})
-    
-
 
 class VehicleViewAPIWithID(View):
     
@@ -104,16 +98,37 @@ class VehicleViewAPIWithID(View):
     @method_decorator(csrf_exempt, name='dispatch')
     def put(self,request,id,*args, **kwargs):
         body = json.loads(request.body.decode("utf-8"))
-        Vehicle.objects.filter(pk=id).update(driver_id=body['driver_id'],make=body['make'],model=body['mamodelke'],plate_number=body['plate_number'])
-        newVehicle = Vehicle.objects.filter(pk=id)
-        data = json.loads(serializers.serialize('json',[newVehicle]))
+        try:
+            driver_instance = Driver.objects.get(pk=body['driver_id'])
+            Vehicle.objects.filter(pk=id).update(driver_id=driver_instance,make=body['make'],model=body['model'],plate_number=body['plate_number'])
+            newVehicle = Vehicle.objects.filter(pk=id)
+            data = json.loads(serializers.serialize('json',[newVehicle]))
+        except Exception:
+            return JsonResponse({"error":traceback.format_exc()})
         return JsonResponse({'success':data})
     
     @method_decorator(csrf_exempt, name='dispatch')
-    def delete(self,request, *args, **kwargs):
-        body = json.loads(request.body("utf-8"))
-        Vehicle.objects.filter(pk=id).delete()
+    def delete(self,request,id, *args, **kwargs):
+        Vehicle.objects.filter(pk=id).delete()     
         newVehicle = Vehicle.objects.all()
-        data = json.loads(serializers.serialize('json',[newVehicle]))
+        try:
+            data = json.loads(serializers.serialize('json',[newVehicle]))
+        except Exception:
+            return JsonResponse({"error":traceback.format_exc()})
         return JsonResponse({'success':data})
 
+class VehicleViewAPISetDriver(View):
+
+    @method_decorator(csrf_exempt, name='dispatch')
+    def post(self,request,id,*args, **kwargs):
+        body = json.loads(request.body.decode("utf-8"))
+        try:
+            driver_instance = Driver.objects.get(pk=body['driver_id'])
+            oldOwner = Vehicle.objects.filter(pk=id).values('driver_id')
+            newOwner= Vehicle.objects.filter(pk=id).update(driver_id=driver_instance)
+            vehicles = Vehicle.objects.filter(pk=id).values('driver_id','make','model','plate_number','created_at','updated_at')
+            data = {'New Owner' : list(vehicles),
+            'Old Owner':list(oldOwner)}
+        except Exception:
+            return JsonResponse({"error":traceback.format_exc()})
+        return JsonResponse({'success': data})
