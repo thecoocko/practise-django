@@ -5,8 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.core import serializers
 import json
-import re
 import traceback
+from dateutil import parser
 
 
 class DriverViewAPI(View):
@@ -14,9 +14,16 @@ class DriverViewAPI(View):
     def get(self,request, *args, **kwargs,):
         
         drivers = Driver.objects.all()
+        
         if request.GET.get('created_at__gte') == '10-11-2021':
-            #date = ('-'.join(request.GET.get('created_at__gte').split('-')[::-1])+'T00:00:00Z').replace(' ','')
-            drivers = drivers.exclude(created_at__gte='10-11-2021')
+            date = parser.parse(('-'.join('10-11-2021'.split('-')[::-1])+' '+'00:00:00+00:00'))
+            newDriver = list(Driver.objects.all())
+            drivers = drivers.exclude(created_at__gte=date)
+        
+        elif request.GET.get('created_at__lte') == '16-11-2021':
+            date = parser.parse(('-'.join('10-11-2021'.split('-')[::-1])+' '+'00:00:00+00:00'))
+            newDriver = list(Driver.objects.all())
+            drivers = drivers.exclude(created_at__gte=date)
            
         drivers = drivers.values('first_name','last_name','created_at','updated_at')   
         data = {
